@@ -26,10 +26,16 @@ class demos(ConanFile):
         self.tool_requires("libhal-cmake-util/1.0.0")
 
     def requirements(self):
+        if str(self.options.platform).startswith("stm32f1"):
+            self.requires("libhal-armcortex/[^2.1.0]")
+            self.requires("libhal-stm32f1/[^2.0.3]")
         if str(self.options.platform).startswith("lpc40"):
-            self.requires("libhal-lpc40/[^2.0.0]")
-        self.requires("libhal-freertos/0.0.1")
-        self.requires("libhal-util/[^2.0.0]")
+            self.requires("libhal-armcortex/[^2.1.0]")
+            self.requires("libhal-lpc40/[^2.1.1]")
+        self.requires("libhal-freertos/10.6.0", options={
+            "configUSE_IDLE_HOOK": False
+        })
+        self.requires("libhal-util/[^3.0.0]")
 
     def layout(self):
         platform_directory = "build/" + str(self.options.platform)
