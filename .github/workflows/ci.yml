@@ -17,9 +17,11 @@ name: ✅ CI
 on:
   workflow_dispatch:
   pull_request:
+  release:
+    types:
+      - published
+      - deleted
   push:
-    tags:
-      - "*"
     branches:
       - main
   schedule:
@@ -27,39 +29,24 @@ on:
 
 jobs:
   ci:
-    uses: libhal/ci/.github/workflows/library.yml@4.0.0
+    uses: libhal/ci/.github/workflows/library.yml@4.x.y
     with:
       coverage: true
     secrets: inherit
   deploy:
-    uses: libhal/ci/.github/workflows/deploy.yml@4.0.0
+    uses: libhal/ci/.github/workflows/deploy.yml@4.x.y
     secrets: inherit
   build_lpc4074:
-    uses: libhal/ci/.github/workflows/demo_builder.yml@4.0.0
-    with:
-      profile: lpc4074
-      processor_profile: https://github.com/libhal/libhal-armcortex.git
-      platform_profile: https://github.com/libhal/libhal-lpc40.git
-    secrets: inherit
-  build_lpc4078:
-    uses: libhal/ci/.github/workflows/demo_builder.yml@4.0.0
+    uses: libhal/ci/.github/workflows/demo_builder.yml@4.x.y
     with:
       profile: lpc4078
       processor_profile: https://github.com/libhal/libhal-armcortex.git
       platform_profile: https://github.com/libhal/libhal-lpc40.git
     secrets: inherit
-
-  # Add more build_<platform> blocks below for each platform you support
-
-  release:
-    # All jobs above MUST pass before creating a release
-    # Add more jobs to the `needs` section as they are added
-    needs: [ci, deploy, build_lpc4074, build_lpc4078]
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          generate_release_notes: true
+  build_lpc4078:
+    uses: libhal/ci/.github/workflows/demo_builder.yml@4.x.y
+    with:
+      profile: stm32f103c8
+      processor_profile: https://github.com/libhal/libhal-armcortex.git
+      platform_profile: https://github.com/libhal/libhal-stm32f1.git
+    secrets: inherit

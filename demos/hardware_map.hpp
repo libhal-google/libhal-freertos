@@ -15,12 +15,12 @@
 #pragma once
 
 #include <libhal/functional.hpp>
-#include <libhal/serial.hpp>
+#include <libhal/output_pin.hpp>
 #include <libhal/steady_clock.hpp>
 
 struct hardware_map
 {
-  hal::serial* console;
+  hal::output_pin* led;
   hal::steady_clock* clock;
   hal::callback<void()> reset;
 };

@@ -14,23 +14,11 @@
 
 cmake_minimum_required(VERSION 3.15)
 
-project(libhal-freertos VERSION 0.0.1 LANGUAGES CXX)
+project(test_package LANGUAGES CXX)
 
-find_package(libhal REQUIRED CONFIG)
-find_package(libhal-util REQUIRED CONFIG)
+find_package(libhal-freertos REQUIRED CONFIG)
 
-add_library(libhal-freertos src/freertos.cpp)
-
-target_include_directories(libhal-freertos PUBLIC include)
-target_compile_features(libhal-freertos PRIVATE cxx_std_20)
-target_compile_options(libhal-freertos PRIVATE -Wall -Wextra)
-target_link_libraries(libhal-freertos PRIVATE
-  libhal::libhal
-  libhal::util
-)
-
-if(NOT BUILD_TESTING STREQUAL OFF)
-  add_subdirectory(tests)
-endif()
-
-install(TARGETS libhal-freertos)
+add_executable(${PROJECT_NAME} main.cpp newlib.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ..)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+target_link_libraries(${PROJECT_NAME} PRIVATE libhal::freertos)

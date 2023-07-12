@@ -1,0 +1,4 @@
+sources:
+  "10.6.0":
+    url: "https://github.com/FreeRTOS/FreeRTOS-Kernel/releases/download/V10.6.0/FreeRTOS-KernelV10.6.0.zip"
+    sha256: "94ec4e4cd147cb3116ce32b1acaf6013a794fc7b441077351a44b4774f246266"

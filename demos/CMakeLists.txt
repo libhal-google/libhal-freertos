@@ -54,4 +54,5 @@ foreach(demo IN LISTS DEMOS)
         libhal::util
         startup_code)
     libhal_post_build(${current_project})
+    libhal_disassemble(${current_project})
 endforeach()

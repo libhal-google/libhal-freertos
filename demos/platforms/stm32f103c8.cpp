@@ -19,9 +19,10 @@
 #include <libhal-armcortex/interrupt.hpp>
 #include <libhal-armcortex/startup.hpp>
 #include <libhal-armcortex/system_control.hpp>
-#include <libhal-lpc40/clock.hpp>
-#include <libhal-lpc40/constants.hpp>
-#include <libhal-lpc40/output_pin.hpp>
+#include <libhal-armcortex/systick_timer.hpp>
+#include <libhal-stm32f1/clock.hpp>
+#include <libhal-stm32f1/constants.hpp>
+#include <libhal-stm32f1/output_pin.hpp>
 #include <libhal-util/enum.hpp>
 #include <libhal-util/steady_clock.hpp>
 
@@ -33,6 +34,13 @@ extern "C" void vPortSVCHandler();
 
 using namespace hal::literals;
 using namespace std::literals;
+
+hal::status initialize_processor()
+{
+  hal::cortex_m::initialize_data_section();
+
+  return hal::success();
+}
 
 void hard_fault_handler()
 {
@@ -59,24 +67,32 @@ void usage_fault_handler()
   }
 }
 
-hal::status initialize_processor()
+extern "C"
 {
-  hal::cortex_m::initialize_data_section();
-  hal::cortex_m::initialize_floating_point_unit();
+  void vPortSetupTimerInterrupt(void)
+  {
+    auto cpu_frequency = hal::stm32f1::frequency(hal::stm32f1::peripheral::cpu);
+    static hal::cortex_m::systick_timer systick(cpu_frequency);
+    if (!systick.schedule(xPortSysTickHandler, 1ms)) {
+      hal::halt();
+    }
+  }
 
-  return hal::success();
+  void vApplicationIdleHook()
+  {
+    // asm volatile("wfi");
+    taskYIELD();
+  }
 }
 
 hal::result<hardware_map> initialize_platform()
 {
-  auto& clock = hal::lpc40::clock::get();
-  auto cpu_frequency = clock.get_frequency(hal::lpc40::peripheral::cpu);
+  auto cpu_frequency = hal::stm32f1::frequency(hal::stm32f1::peripheral::cpu);
   static hal::cortex_m::dwt_counter steady_clock(cpu_frequency);
 
-  static auto led = HAL_CHECK(hal::lpc40::output_pin::get(1, 10));
+  static auto led = HAL_CHECK(hal::stm32f1::output_pin::get('C', 13));
 
-  // Initialize IVT
-  hal::cortex_m::interrupt::initialize<hal::value(hal::lpc40::irq::max)>();
+  hal::cortex_m::interrupt::initialize<hal::value(hal::stm32f1::irq::max)>();
 
   hal::cortex_m::interrupt(hal::value(hal::cortex_m::irq::hard_fault))
     .enable(hard_fault_handler);
@@ -92,8 +108,6 @@ hal::result<hardware_map> initialize_platform()
     .enable(vPortSVCHandler);
   hal::cortex_m::interrupt(hal::value(hal::cortex_m::irq::pend_sv))
     .enable(xPortPendSVHandler);
-  hal::cortex_m::interrupt(hal::value(hal::cortex_m::irq::systick))
-    .enable(xPortSysTickHandler);
 
   return hardware_map{
     .led = &led,
