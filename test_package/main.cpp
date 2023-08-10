@@ -12,93 +12,104 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <sys/stat.h>
-#include <unistd.h>
+#include <FreeRTOS.h>
+#include <task.h>
 
-#include <cstdio>
-#include <cstdlib>
-#include <exception>
+constexpr size_t stack_size = 500;
+/* Structure that will hold the TCB of the task being created. */
+StaticTask_t xTaskBuffer;
 
-#include <libhal-freertos/freertos.hpp>
+/* Buffer that the task being created will use as its stack.  Note this is
+an array of StackType_t variables.  The size of StackType_t is dependent on
+the RTOS port. */
+StackType_t xStack[stack_size];
+
+/* Function that implements the task being created. */
+void vTaskCode(void* pvParameters)
+{
+  /* The parameter value is expected to be 1 as 1 is passed in the
+  pvParameters value in the call to xTaskCreateStatic(). */
+  configASSERT((uint32_t)pvParameters == 1UL);
+
+  for (;;) {
+    /* Task code goes here. */
+  }
+}
 
 int main()
 {
-  hal::freertos::freertos_replace_me bar;
-}
+  TaskHandle_t xHandle = NULL;
 
-namespace boost {
-void throw_exception(std::exception const& e)
-{
-  std::abort();
+  /* Create the task without using any dynamic memory allocation. */
+  xHandle = xTaskCreateStatic(
+    vTaskCode,        /* Function that implements the task. */
+    "NAME",           /* Text name for the task. */
+    stack_size,       /* Number of indexes in the xStack array. */
+    (void*)1,         /* Parameter passed into the task. */
+    tskIDLE_PRIORITY, /* Priority at which the task is created. */
+    xStack,           /* Array to use as the task's stack. */
+    &xTaskBuffer);    /* Variable to hold the task's data structure. */
+
+  /* Start the RTOS scheduler, this function should not return as it causes the
+  execution context to change from main() to one of the created tasks. */
+  vTaskStartScheduler();
+
+  return 0;
 }
-}  // namespace boost
 
 extern "C"
 {
-  /// Dummy implementation of getpid
-  int _getpid_r()
+  /* configSUPPORT_STATIC_ALLOCATION is set to 1, so the application must
+  provide an implementation of vApplicationGetIdleTaskMemory() to provide the
+  memory that is used by the Idle task. */
+  void vApplicationGetIdleTaskMemory(StaticTask_t** ppxIdleTaskTCBBuffer,
+                                     StackType_t** ppxIdleTaskStackBuffer,
+                                     uint32_t* pulIdleTaskStackSize)
   {
-    return 1;
-  }
+    /* If the buffers to be provided to the Idle task are declared inside this
+    function then they must be declared static - otherwise they will be
+    allocated on the stack and so not exists after this function exits. */
+    static StaticTask_t xIdleTaskTCB;
+    static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
 
-  /// Dummy implementation of kill
-  int _kill_r(int, int)
-  {
-    return -1;
-  }
+    /* Pass out a pointer to the StaticTask_t structure in which the Idle task's
+    state will be stored. */
+    *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
 
-  /// Dummy implementation of fstat, makes the assumption that the "device"
-  /// representing, in this case STDIN, STDOUT, and STDERR as character devices.
-  int _fstat_r([[maybe_unused]] int file, struct stat* status)
-  {
-    status->st_mode = S_IFCHR;
-    return 0;
-  }
+    /* Pass out the array that will be used as the Idle task's stack. */
+    *ppxIdleTaskStackBuffer = uxIdleTaskStack;
 
-  int _write_r([[maybe_unused]] int file,
-               [[maybe_unused]] const char* ptr,
-               int length)
-  {
-    return length;
+    /* Pass out the size of the array pointed to by *ppxIdleTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configMINIMAL_STACK_SIZE is specified in words, not bytes. */
+    *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
   }
+  /*-----------------------------------------------------------*/
 
-  int _read_r([[maybe_unused]] FILE* file,
-              [[maybe_unused]] char* ptr,
-              int length)
+  /* configSUPPORT_STATIC_ALLOCATION and configUSE_TIMERS are both set to 1, so
+  the application must provide an implementation of
+  vApplicationGetTimerTaskMemory() to provide the memory that is used by the
+  Timer service task. */
+  void vApplicationGetTimerTaskMemory(StaticTask_t** ppxTimerTaskTCBBuffer,
+                                      StackType_t** ppxTimerTaskStackBuffer,
+                                      uint32_t* pulTimerTaskStackSize)
   {
-    return length;
-  }
+    /* If the buffers to be provided to the Timer task are declared inside this
+    function then they must be declared static - otherwise they will be
+    allocated on the stack and so not exists after this function exits. */
+    static StaticTask_t xTimerTaskTCB;
+    static StackType_t uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
 
-  // Dummy implementation of _lseek
-  int _lseek_r([[maybe_unused]] int file,
-               [[maybe_unused]] int ptr,
-               [[maybe_unused]] int dir)
-  {
-    return 0;
-  }
+    /* Pass out a pointer to the StaticTask_t structure in which the Timer
+    task's state will be stored. */
+    *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
 
-  // Dummy implementation of close
-  int _close_r([[maybe_unused]] int file)
-  {
-    return -1;
-  }
+    /* Pass out the array that will be used as the Timer task's stack. */
+    *ppxTimerTaskStackBuffer = uxTimerTaskStack;
 
-  // Dummy implementation of isatty
-  int _isatty_r([[maybe_unused]] int file)
-  {
-    return 1;
-  }
-
-  // Dummy implementation of isatty
-  void _exit([[maybe_unused]] int file)
-  {
-    while (1) {
-      continue;
-    }
-  }
-  // Dummy implementation of isatty
-  void* _sbrk([[maybe_unused]] int size)
-  {
-    return nullptr;
+    /* Pass out the size of the array pointed to by *ppxTimerTaskStackBuffer.
+    Note that, as the array is necessarily of type StackType_t,
+    configTIMER_TASK_STACK_DEPTH is specified in words, not bytes. */
+    *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
   }
 }
