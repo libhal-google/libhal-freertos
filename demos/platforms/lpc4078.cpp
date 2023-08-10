@@ -59,6 +59,24 @@ void usage_fault_handler()
   }
 }
 
+extern "C"
+{
+  void vPortSetupTimerInterrupt(void)
+  {
+    auto& clock = hal::lpc40::clock::get();
+    auto cpu_frequency = clock.get_frequency(hal::lpc40::peripheral::cpu);
+    static hal::cortex_m::systick_timer systick(cpu_frequency);
+    if (!systick.schedule(xPortSysTickHandler, 1ms)) {
+      hal::halt();
+    }
+  }
+
+  void vApplicationIdleHook()
+  {
+    asm volatile("wfi");
+  }
+}
+
 hal::status initialize_processor()
 {
   hal::cortex_m::initialize_data_section();

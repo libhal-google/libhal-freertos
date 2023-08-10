@@ -33,7 +33,7 @@ class demos(ConanFile):
             self.requires("libhal-armcortex/[^2.1.0]")
             self.requires("libhal-lpc40/[^2.1.1]")
         self.requires("libhal-freertos/10.6.0", options={
-            "configUSE_IDLE_HOOK": False
+            "configUSE_IDLE_HOOK": True
         })
         self.requires("libhal-util/[^3.0.0]")
 
