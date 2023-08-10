@@ -80,8 +80,7 @@ extern "C"
 
   void vApplicationIdleHook()
   {
-    // asm volatile("wfi");
-    taskYIELD();
+    asm volatile("wfi");
   }
 }
 
