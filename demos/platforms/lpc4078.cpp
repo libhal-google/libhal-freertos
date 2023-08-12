@@ -19,6 +19,7 @@
 #include <libhal-armcortex/interrupt.hpp>
 #include <libhal-armcortex/startup.hpp>
 #include <libhal-armcortex/system_control.hpp>
+#include <libhal-armcortex/systick_timer.hpp>
 #include <libhal-lpc40/clock.hpp>
 #include <libhal-lpc40/constants.hpp>
 #include <libhal-lpc40/output_pin.hpp>
