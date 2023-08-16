@@ -20,7 +20,7 @@ from pathlib import Path
 import os
 
 
-required_conan_version = ">=1.50.0"
+required_conan_version = ">=2.0.6"
 hard_coded_freertos_config = """
 #define configUSE_ALTERNATIVE_API               0
 #define configENABLE_BACKWARD_COMPATIBILITY     0

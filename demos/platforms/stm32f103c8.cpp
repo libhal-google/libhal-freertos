@@ -37,7 +37,7 @@ using namespace std::literals;
 
 hal::status initialize_processor()
 {
-  hal::cortex_m::initialize_data_section();
+  // Handled by picolibc's crt0.s startup code
 
   return hal::success();
 }

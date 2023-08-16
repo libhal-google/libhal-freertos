@@ -18,7 +18,7 @@ project(test_package LANGUAGES CXX)
 
 find_package(libhal-freertos REQUIRED CONFIG)
 
-add_executable(${PROJECT_NAME} main.cpp newlib.cpp)
+add_executable(${PROJECT_NAME} main.cpp)
 target_include_directories(${PROJECT_NAME} PRIVATE ..)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_link_libraries(${PROJECT_NAME} PRIVATE libhal::freertos)
