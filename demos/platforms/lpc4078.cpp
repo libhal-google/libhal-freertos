@@ -80,8 +80,7 @@ extern "C"
 
 hal::status initialize_processor()
 {
-  hal::cortex_m::initialize_data_section();
-  hal::cortex_m::initialize_floating_point_unit();
+  // Handled by picolibc's crt0.s startup code
 
   return hal::success();
 }
